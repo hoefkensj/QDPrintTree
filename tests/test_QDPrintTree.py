@@ -3,9 +3,9 @@
 # # FILE: QDPrintTree.py           20230501:014156
 # #
 import unittest
-from QDPrintTree.main import pTree
+import QDPrintTree
 
-class main(unittest.TestCase):
+class MyTestCase(unittest.TestCase):
 	# def test_something(self):
 	# 	self.assertEqual(True, False)  # add assertion here
 
@@ -19,7 +19,7 @@ class main(unittest.TestCase):
 														'i' : 'j'},
 											'k':'l'}
  								}
-		pTree(test_dict)
+		QDPrintTree.pTree(test_dict)
 		# element=QElement('Qid','QType')
 		# self.assertEqual(element.Meta.QId, 'Qid')
 
