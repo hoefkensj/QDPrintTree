@@ -6,3 +6,4 @@ QDPrintTree.egg-info/PKG-INFO
 QDPrintTree.egg-info/SOURCES.txt
 QDPrintTree.egg-info/dependency_links.txt
 QDPrintTree.egg-info/top_level.txt
+tests/test_QDPrintTree.py

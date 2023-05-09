@@ -24,7 +24,7 @@ def pTree(*a, **k):
 	d = a[0]
 	maxd = a[1] if len(a) > 1 else 0
 	limi = k.get("limit") or (a[2] if len(a) > 2 else 0)
-
+	offset=k.get('offset', '')
 	depth = k.get("depth") or 0
 	keys = len(d.keys())
 
@@ -40,15 +40,47 @@ def pTree(*a, **k):
 			dkey = shorten(
 				f"\x1b[32m{d[key]}\x1b[0m" if callable(d[key]) else str(d[key]), 40
 			)
+
 			keys -= 1
+
+
 			if isinstance(d[key], dict):
 				sys.stdout.write("\n")
-				sys.stdout.write("  ┃  " * (depth))
+				sys.stdout.write(offset)
 				sys.stdout.write("  ┗━━ " if keys == 0 else "  ┣━━ ")
 				sys.stdout.write(f"\x1b[1;34m{str(key)}\t:\x1b[0m\t")
-				pTree(d[key], maxd, limi, depth=depth + 1)
+				if keys ==0 :
+					offset+="     "
+				else :
+					offset+="  ┃  "
+				pTree(d[key], maxd, limi, depth=depth + 1,offset=offset)
 			else:
 				sys.stdout.write("\n")
-				sys.stdout.write("  ┃  " * (depth))
+				sys.stdout.write(offset)
 				sys.stdout.write("  ┗━━ " if keys == 0 else "  ┣━━ ")
 				sys.stdout.write(f"{str(key)}\t:\t{dkey}")
+			offset=offset[:-6]
+test_dict={
+						'a':'b',
+						'c': {
+									'd': 'e',
+									'f': 'g',
+									'h': {
+												'i' : 'j',
+												'k':'l',
+												},
+									'm':'n'}
+						}
+pTree(test_dict)
+
+'''
+test_dict:
+	├──╸a:  b
+	└─┬╸c:
+		├───╸d:  e
+		├───╸f:  g
+		├─┬─╸h:
+		│ ├───╸i:  j
+		│ └───╸k:  l
+		└───╸m:  n
+'''
