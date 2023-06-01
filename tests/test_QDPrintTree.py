@@ -5,24 +5,22 @@
 import unittest
 from src import QDPrintTree
 
-class MyTestCase(unittest.TestCase):
-	# def test_something(self):
-	# 	self.assertEqual(True, False)  # add assertion here
+class QDTest(unittest.TestCase):
+
 
 	def test_ptree(self):
 		test_dict={
 		'root' : {
 								'aaaa':'b',
 								'cccc': {
-											'dddd': 'e',
-											'ffff': 'g',
+											'dddd': print,
+											'ffff': type,
 											'hhhh': {
 														'i' : 'j'},
 											'kkkk':'l'}
 			}							}
 		QDPrintTree.pTree(test_dict)
-		# element=QElement('Qid','QType')
-		# self.assertEqual(element.Meta.QId, 'Qid')
+
 
 
 
