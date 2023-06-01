@@ -1,71 +1,62 @@
 #!/usr/bin/env python
-# # # PROJECT: QDPrintTree                        AUTHOR: Hoefkens.j@gmail.com
-# # FILE: main.py           20230501:013700
-# #
-
-
-#!/usr/bin/env python
+# ##############################################################################
+# # PROJ: QDPrintTree                    AUTHORS:         Hoefkens.j@gmail.com #
+# # FILE: main.py                                                              #
+# # REPO: hoefkensj/QDPrintTree.git                                            #
+# # HOST: github.com                                                           #
+# # VERSION: 0.1.0                                                             #
+# # UPDATED:  20230501:013700                                                  #
+# ##############################################################################
+#
 from textwrap import shorten
-from conf import settings
+from QDPrintTree.conf import settings
 
 
-
-def txtwrap(string,offset):
-	string=shorten(	string, 80-len(offset))
+def txtwrap(string, offset):
+	string = shorten(string, 80 - len(offset))
 	return string
+
 
 def pTree(*a, **k):
 	d = a[0]
-	style=k.get('style',1)
-	offset=[*k.get('offset', '')]
-	symb=settings['styles'][style]
-	maxw=k.get('max-width',settings.get('maxw',160))
-	keys=[*d.keys()]
+	style = k.get('style', 1)
+	offset = [*k.get('offset', '')]
+	symb = settings['styles'][style]
+	maxw = k.get('max-width', settings.get('maxw', 160))
+	keys = [*d.keys()]
+
+	mreset = settings['markup'].get('reset')
+	mdict  = settings['markup'].get('dict')
+	mfn    = settings['markup'].get('function')
+	mkey   = settings['markup'].get('key')
+	mval   = settings['markup'].get('val')
+
 	for key in keys:
-		koffset=[symb[-1],]
-		coffset=[' ']
-		val=d[key]
+		koffset = [
+			symb[-1],
+		]
+		coffset = [' ']
+		val = d[key]
 		if '__dict__' in dir(d[key]):
-			val=d[key].__dict__()
-		koffset+=symb[3 * isinstance(d[key],dict)]
+			val = d[key].__dict__()
+		koffset += symb[3 * isinstance(d[key], dict)]
 		if key == [*d.keys()][-1]:
-			koffset+=[symb[2]]
-			coffset+=[' ']
+			koffset += [symb[2]]
+			coffset += [' ']
 		else:
-			koffset+=[symb[1]]
-			coffset+=[symb[4]]
+			koffset += [symb[1]]
+			coffset += [symb[4]]
 
-		print(''.join(offset),symb[0].join(koffset[::-1]),end='')
-		print(key,end='')
-		if isinstance(d[key],dict):
+		print(''.join(offset), symb[0].join(koffset[::-1]), end='')
+
+		if isinstance(d[key], dict):
+			print(mdict,end='')
+			print(key, end=mreset)
 			print('\t:')
-			pTree(d[key],offset=[*offset,*coffset],style=style)
+			pTree(d[key], offset=[*offset, *coffset], style=style)
 		else:
-			print('\t:\t',shorten(repr(val),maxw))
+			print(mkey,key,mreset,end='')
 
+			mstr=(mfn * callable(val)) or mval
 
-
-
-test_dict={
-		'root' : {
-								'aaaa':'b',
-								'cccc': {
-											'dddd': 'e',
-											'ffff': 'g',
-											'hhhh': {
-														'i' : 'j'},
-											'kkkk':'l'},
-							}
-}
-pTree(test_dict,style=1)
-'''
-test_dict:
-	├──╸a:  b
-	└─┬╸c:
-		├───╸d:  e
-		├───╸f:  g
-		├─┬─╸h:
-		│ ├───╸i:  j
-		│ └───╸k:  l
-		└───╸m:  n
-'''
+			print('\t:\t',mstr,shorten(repr(val), maxw),mreset)
