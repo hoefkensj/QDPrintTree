@@ -3,7 +3,7 @@
 # # FILE: QDPrintTree.py           20230501:014156
 # #
 import unittest
-import QDPrintTree
+from src import QDPrintTree
 
 class MyTestCase(unittest.TestCase):
 	# def test_something(self):
@@ -11,14 +11,15 @@ class MyTestCase(unittest.TestCase):
 
 	def test_ptree(self):
 		test_dict={
-								'a':'b',
-								'c': {
-											'd': 'e',
-											'f': 'g',
-											'h': {
+		'root' : {
+								'aaaa':'b',
+								'cccc': {
+											'dddd': 'e',
+											'ffff': 'g',
+											'hhhh': {
 														'i' : 'j'},
-											'k':'l'}
- 								}
+											'kkkk':'l'}
+			}							}
 		QDPrintTree.pTree(test_dict)
 		# element=QElement('Qid','QType')
 		# self.assertEqual(element.Meta.QId, 'Qid')

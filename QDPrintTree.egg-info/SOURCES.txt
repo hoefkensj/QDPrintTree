@@ -2,6 +2,7 @@ LICENSE
 pyproject.toml
 QDPrintTree/__init__.py
 QDPrintTree/main.py
+QDPrintTree/settings.conf.py
 QDPrintTree.egg-info/PKG-INFO
 QDPrintTree.egg-info/SOURCES.txt
 QDPrintTree.egg-info/dependency_links.txt
