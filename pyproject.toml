@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "qdprinttree"
 version = "0.1.0"
-description = ""
+description = "Quick&Dirty Python Print Tree for dicts"
 authors = ["hoefkensj <hoefkens.j@gmail.com>"]
 license = "Mit"
 readme = "README.md"
