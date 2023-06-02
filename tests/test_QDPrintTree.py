@@ -19,7 +19,7 @@ class QDTest(unittest.TestCase):
 														'i' : 'j'},
 											'kkkk':'l'}
 			}							}
-		QDPrintTree.pTree(test_dict)
+		QDPrintTree.pTree(test_dict,style=3)
 
 
 
