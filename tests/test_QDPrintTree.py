@@ -3,23 +3,24 @@
 # # FILE: QDPrintTree.py           20230501:014156
 # #
 import unittest
-from src import QDPrintTree
-
+import QDPrintTree
+def testfunction():
+		pass
 class QDTest(unittest.TestCase):
 
 
 	def test_ptree(self):
 		test_dict={
 		'root' : {
-								'aaaa':'b',
-								'cccc': {
-											'dddd': print,
-											'ffff': type,
-											'hhhh': {
-														'i' : 'j'},
-											'kkkk':'l'}
+								'key[1,0]':'val[1,0]',
+								'key[1,1]': {
+											'key[2,0]': 'val[2,0]',
+											'key[2,1]': type,
+											'key[2,2': {
+														'key[3,0]' : 'val[3,0]'},
+											'kkkk': testfunction }
 			}							}
-		QDPrintTree.pTree(test_dict,style=3)
+		print(QDPrintTree.getPrintTree(test=test_dict,style=1))
 
 
 

@@ -5,49 +5,148 @@
 # # REPO: hoefkensj/QDPrintTree.git                                            #
 # # HOST: github.com                                                           #
 # # VERSION: 0.1.0                                                             #
-# # UPDATED:  20230501:013700                                                  #
+# # UPDATED: 20230601:013700                                                   #
 # ##############################################################################
-#
-from textwrap import shorten
-from QDPrintTree.conf import settings
+from QDPrintTree.conf import settings,static
+from inspect import getmembers,isbuiltin,isfunction
+from shutil import get_terminal_size
+def islike(obj):
+	state='val'
+	if isinstance(obj, dict):
+		state='dict'
+	if not isbuiltin(obj):
+		if '__dict__' in dir(obj):
+			state='class'
+	if isfunction(obj):
+			state='function'
+	
+	return state
+def todict(obj):
+	result=obj
+	if not isbuiltin(obj):
+		if '__dict__' in dir(obj):
+			result=obj.__dict__
+		if isfunction(obj):
+			result=obj.__name__
+	return result
+	
+
+def mkup(string,style=''):
+	mask=static['stylemask']
+	pfx=settings['markup'].get(style,'')
+	sfx=settings['markup'].get('reset')
+	result=mask.format(PFX=pfx, STR=string, SFX=sfx)
+	return  result
+	
+def buildNode(**k):
+	def offset(n):
+		n['off']+=[' ' if n['set'][0] == n['set'][1] else c[3]]
+		n['off']+=' '
+		return n
+	def tree(n):
+		n['tree']=[c[4] if n['set'][0] == n['set'][1] else c[2]]
+		n['tree']+=[c[1]]
+		n['tree']+=[c[5] if islike(n['val']) in ['dict','class'] else c[1]]
+		n['tree']+=[c[0]]
+		return n
+	n={}
+	c=settings.get('styles')[k.get('charset',1)]
+	v=k.get('val')
+	n['pfx']=k.get('pfx')
+	n['off']=[*n['pfx']]
+	n['set']=[k.get('idx'), k.get('tot')]
+	n['type']= islike(v)
+	n['key']=k.get('key')
+	n['val']=todict(v)
+	n=offset(n)
+	n=tree(n)
+	return n
+def buildTree(node,pfx=None,**k):
+	if not pfx:	pfx=[]
+	
+	string=''
+	b={}
+	tot=len(node)
+	for idx,key in enumerate(node,start=1):
+		b[key]=buildNode(
+		            pfx=pfx,
+		            idx=idx,
+		            tot=tot,
+		            key=key,
+		            val=node[key],
+	              **k
+		            )
+
+		
+	for key in b:
+		string+='\n'
+		string+=mkup(''.join(b[key]['pfx']))
+		string+=mkup(''.join(b[key]['tree']),'tree')
+		string+='{K}'
+		if b[key]['type'] in ['dict','class']:
+			
+
+			string+=mkup(b[key]['key'], b[key]['type'])
+			string+='{C}'
+			string+=mkup(':')
+			string+=buildTree(b[key]['val'],b[key]['off'])
+		else:
+			
+			string+=mkup(b[key]['key'], 'key')
+			string+='{C}'
+			string+=mkup(':')
+			string+='{V}'
+			string+=mkup(b[key]['val'],b[key]['type'])
+		
 
 
-def txtwrap(string, max,offset):
-	string = shorten(string, max - len(offset))
 	return string
 
 
-def pTree(*a, **k):
-	d      = a[0]
-	style  = k.get('style', 1)
-	offset = [*k.get('offset', '')]
-	# coll	 = k.get('collapse', ['dunder',])  																		TODO
-	maxw   = k.get('max-width', settings.get('maxw', 160))
-	symb   = settings['styles'][style]
-	mreset = settings['markup'].get('reset')
-	mdict  = settings['markup'].get('dict')
-	mfn    = settings['markup'].get('function')
-	mkey   = settings['markup'].get('key')
-	mval   = settings['markup'].get('val')
-
-	for key in d:
-		koffset=[symb[-1]]
-		coffset=[' ']
-		val=d[key]
-		if '__dict__' in dir(val):
-			val=dict(val.__dict__)
-		koffset+=symb[3 * isinstance(val, dict)]
-		koffset+=[symb[1]]
-		coffset+=[symb[4]]
-		if key == [*d.keys()][-1]:
-			koffset[-1]=symb[2]
-			coffset[-1]=' '
-		print(''.join(offset), symb[0].join(koffset[::-1]), end='')
-
-		if isinstance(val, dict):
-			print(mdict,key,mreset,':')
-			pTree(val, offset=[*offset, *coffset], style=style)
-		else:
-			print(mkey, key, mreset, end='')
-			mstr=(mfn * callable(val)) or mval
-			print('\x1b[40G:\t', mstr, txtwrap(repr(val), maxw,coffset), mreset)
+def getPrintTree(**k):
+		name=[*k.keys()][0]
+		data=k.get(name)
+		K=k.get('offset_key',' ')
+		C=k.get('offset_colon',' ')
+		V=k.get('offset_value',' ')
+		treeString=buildTree(data)
+		return treeString.format(K=K,C=C,V=V)
+		# if not
+		# 	pfx[-1]=symb[0]
+		# 	print(symb[0].join(pfx),end='')
+		# 	print(key, end=':')
+		# 	print(node[key])
+		# else:
+		# 	pfx+=[symb[3] if idx ==len(node) else '  ']
+		# 	printTree(key,node[key],pfx,depth=depth+1,sibl=len(node),idx=idx)
+			
+	# print(tree)
+		
+# if __name__ == '__main__' :
+# 	class b:
+# 		def __init__(self):
+# 			self.ikkel='test'
+#
+# 	c=b()
+# 	c.test='ikkel'
+# 	test_dict={
+# 		'1key1aa': c,
+# 		'1key2': {
+# 			'2key1':'2',
+# 			'2key2': {
+# 				'3key1': b()
+# 				},
+# 			'2key3': {
+# 				'3key1': '2',
+# 				'3key2': {
+# 					'4key1': 'l'
+# 					}
+# 				}
+# 			}
+# 		}
+# 	test_dict['sub']={**test_dict}
+# 	tree=test_dict
+# 	# breakpoint()
+# 	print(type(c))
+# 	treestr=printTree(tree,[])
+# 	print(treestr.format(KOFF=' ',SOFF=''.rjust(2,' '),VOFF='\x1b[50G'.rjust(2,'┈')))
