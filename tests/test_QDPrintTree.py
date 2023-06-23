@@ -20,7 +20,9 @@ class QDTest(unittest.TestCase):
 														'key[3,0]' : 'val[3,0]'},
 											'kkkk': testfunction }
 			}							}
-		print(QDPrintTree.getPrintTree(test=test_dict,style=1))
+		print(QDPrintTree.getPrintTree(test=test_dict))
+		print(QDPrintTree.getPrintTree(test=test_dict,charset=0))
+		print(QDPrintTree.getPrintTree(test=test_dict,charset=2))
 
 
 

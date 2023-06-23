@@ -14,11 +14,12 @@ def islike(obj):
 	state='val'
 	if isinstance(obj, dict):
 		state='dict'
-	if not isbuiltin(obj):
-		if '__dict__' in dir(obj):
-			state='class'
+	if '__dict__' in dir(obj):
+		state='class'
+	if type(obj).__name__ == 'type':
+		state='class'
 	if isfunction(obj):
-			state='function'
+		state='function'
 	
 	return state
 def todict(obj):
@@ -46,7 +47,7 @@ def buildNode(**k):
 	def tree(n):
 		n['tree']=[c[4] if n['set'][0] == n['set'][1] else c[2]]
 		n['tree']+=[c[1]]
-		n['tree']+=[c[5] if islike(n['val']) in ['dict','class'] else c[1]]
+		n['tree']+=[c[5] if n['type'] in ['dict','class'] else c[1]]
 		n['tree']+=[c[0]]
 		return n
 	n={}
@@ -63,7 +64,6 @@ def buildNode(**k):
 	return n
 def buildTree(node,pfx=None,**k):
 	if not pfx:	pfx=[]
-	
 	string=''
 	b={}
 	tot=len(node)
@@ -76,38 +76,31 @@ def buildTree(node,pfx=None,**k):
 		            val=node[key],
 	              **k
 		            )
-
-		
+	
 	for key in b:
 		string+='\n'
 		string+=mkup(''.join(b[key]['pfx']))
 		string+=mkup(''.join(b[key]['tree']),'tree')
 		string+='{K}'
 		if b[key]['type'] in ['dict','class']:
-			
-
 			string+=mkup(b[key]['key'], b[key]['type'])
 			string+='{C}'
 			string+=mkup(':')
-			string+=buildTree(b[key]['val'],b[key]['off'])
+			string+=buildTree(b[key]['val'],b[key]['off'],**k)
 		else:
-			
 			string+=mkup(b[key]['key'], 'key')
 			string+='{C}'
 			string+=mkup(':')
 			string+='{V}'
 			string+=mkup(b[key]['val'],b[key]['type'])
-		
-
-
 	return string
-
 
 def getPrintTree(**k):
 		name=[*k.keys()][0]
 		data=k.get(name)
+		k.pop(name)
 		K=k.get('offset_key',' ')
 		C=k.get('offset_colon',' ')
 		V=k.get('offset_value',' ')
-		treeString=buildTree(data)
+		treeString=buildTree(data,**k)
 		return treeString.format(K=K,C=C,V=V)
