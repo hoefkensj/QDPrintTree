@@ -1,1 +1,1 @@
-from QDPrintTree.main import buildTree,getPrintTree
+from QDPrintTree.main import string,stdOut

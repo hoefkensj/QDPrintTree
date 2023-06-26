@@ -4,25 +4,30 @@
 # #
 import unittest
 import QDPrintTree
-def testfunction():
+def tstfunction():
 		pass
+class tstClass:
+	def __init__(slf,*a,**k):
+		slf.a=a
+		slf.k=k
 class QDTest(unittest.TestCase):
 
 
 	def test_ptree(self):
+		tstInstance=tstClass('argument',test='ikkel')
 		test_dict={
 		'root' : {
 								'key[1,0]':'val[1,0]',
 								'key[1,1]': {
 											'key[2,0]': 'val[2,0]',
-											'key[2,1]': type,
+											'key[2,1]': tstInstance,
 											'key[2,2': {
 														'key[3,0]' : 'val[3,0]'},
-											'kkkk': testfunction }
+											'kkkk': tstfunction }
 			}							}
-		print(QDPrintTree.getPrintTree(test=test_dict))
-		print(QDPrintTree.getPrintTree(test=test_dict,charset=0))
-		print(QDPrintTree.getPrintTree(test=test_dict,charset=2))
+		print(QDPrintTree.string(test=test_dict))
+		print(QDPrintTree.string(test=test_dict,charset=0))
+		QDPrintTree.stdOut(test=test_dict,charset=2)
 
 
 

@@ -10,97 +10,122 @@
 from QDPrintTree.conf import settings,static
 from inspect import getmembers,isbuiltin,isfunction
 from shutil import get_terminal_size
-def islike(obj):
-	state='val'
-	if isinstance(obj, dict):
-		state='dict'
-	if '__dict__' in dir(obj):
-		state='class'
-	if type(obj).__name__ == 'type':
-		state='class'
-	if isfunction(obj):
-		state='function'
-	
-	return state
-def todict(obj):
-	result=obj
-	if not isbuiltin(obj):
-		if '__dict__' in dir(obj):
-			result=obj.__dict__
-		if isfunction(obj):
-			result=obj.__name__
-	return result
-	
 
-def mkup(string,style=''):
-	mask=static['stylemask']
-	pfx=settings['markup'].get(style,'')
-	sfx=settings['markup'].get('reset')
-	result=mask.format(PFX=pfx, STR=string, SFX=sfx)
-	return  result
+class build:
+	@staticmethod
+	def Node(pfx,key,idx,tot,val,**k):
+		def offset(last):
+			off=[*pfx]
+			if last:	off+=[' ',' ']
+			else: 		off+=['{3}',' ']
+			return off
+		def tree(last,objType):
+			lst=[]
+			if last:lst+=['{4}']
+			else: lst+=['{2}']
+			lst+=['{1}']
+			if objType in ['dict', 'class','type']: lst+=['{5}']
+			else: lst+=['{1}']
+			lst+=['{0}']
+			return lst
 	
-def buildNode(**k):
-	def offset(n):
-		n['off']+=[' ' if n['set'][0] == n['set'][1] else c[3]]
-		n['off']+=' '
-		return n
-	def tree(n):
-		n['tree']=[c[4] if n['set'][0] == n['set'][1] else c[2]]
-		n['tree']+=[c[1]]
-		n['tree']+=[c[5] if n['type'] in ['dict','class'] else c[1]]
-		n['tree']+=[c[0]]
-		return n
-	n={}
-	c=settings.get('styles')[k.get('charset',1)]
-	v=k.get('val')
-	n['pfx']=k.get('pfx')
-	n['off']=[*n['pfx']]
-	n['set']=[k.get('idx'), k.get('tot')]
-	n['type']= islike(v)
-	n['key']=k.get('key')
-	n['val']=todict(v)
-	n=offset(n)
-	n=tree(n)
-	return n
-def buildTree(node,pfx=None,**k):
-	if not pfx:	pfx=[]
-	string=''
-	b={}
-	tot=len(node)
-	for idx,key in enumerate(node,start=1):
-		b[key]=buildNode(
-		            pfx=pfx,
-		            idx=idx,
-		            tot=tot,
-		            key=key,
-		            val=node[key],
-	              **k
-		            )
+		objType  = tools.typeName(val)
+		n={ 'pfx':pfx,
+			  'idx':idx,
+			  'tot':tot,
+			  'key':key,
+				'charset' : k.get('chars'),
+			}
 	
-	for key in b:
-		string+='\n'
-		string+=mkup(''.join(b[key]['pfx']))
-		string+=mkup(''.join(b[key]['tree']),'tree')
-		string+='{K}'
-		if b[key]['type'] in ['dict','class']:
-			string+=mkup(b[key]['key'], b[key]['type'])
-			string+='{C}'
-			string+=mkup(':')
-			string+=buildTree(b[key]['val'],b[key]['off'],**k)
+		n['val'] = tools.parseVal(val,objType)
+		n['type']= objType
+		last     = (n['idx']==n['tot'])
+		n['off'] = offset(last)
+		n['tree']= tree(last, objType)
+		return n
+	@staticmethod
+	def Structure(node,pfx=None,**k):
+		chars=k.get('charset',1)
+		if type(chars).__name__ == 'int':
+			chars=tools.charset(**k)
+		b={}
+		if not pfx:  pfx=[]
+		tot=len(node)
+		for idx, key in enumerate(node, start=1):
+			n={}
+			n=build.Node(pfx,key,idx,tot,node[key],chars=chars,**k)
+			if n['type'] in ['dict','type','class','mappingproxy']:
+				n['val']=build.Structure(n['val'],pfx,**k)
+			
+			b[key]=n
+		return b
+	@staticmethod
+	def Tree(node, struct, **k):
+		b=struct
+		string=''
+		for key in b:
+
+			string+='\n'
+			string+=tools.mkup(''.join(b[key]['off']), 'tree').format(*b[key]['charset'])
+			string+=tools.mkup(''.join(b[key]['tree']), 'tree').format(*b[key]['charset'])
+			string+='{K}'
+			if b[key]['type'] in ['dict', 'class']:
+				string+=tools.mkup(b[key]['key'], b[key]['type'])
+				string+='{C}'
+				string+=tools.mkup(':')
+				string+=build.Tree(b[key]['val'],struct[key]['val'], **k)
+			else:
+				string+=tools.mkup(b[key]['key'], 'key')
+				string+='{C}'
+				string+=tools.mkup(':')
+				string+='{V}'
+				string+=tools.mkup(b[key]['val'], b[key]['type'])
+		return string
+
+class tools:
+	@staticmethod
+	def charset(**k):
+		sets = settings.get('charset')
+		sel  = k.get('charset', 1)
+		return sets[sel]
+	@staticmethod
+	def typeName(obj):return type(obj).__name__
+	@staticmethod
+	def parseVal(val,valType):
+		if valType in ['type','class','mappingproxy']:
+			result=tools.todict(val)
+		elif valType in ['function','method']:
+			result=f'{val.__name__}()'
 		else:
-			string+=mkup(b[key]['key'], 'key')
-			string+='{C}'
-			string+=mkup(':')
-			string+='{V}'
-			string+=mkup(b[key]['val'],b[key]['type'])
-	return string
+			result=val
+		return result
+	@staticmethod
+	def todict(obj):
+		if not isbuiltin(obj):
+				if __dict__ in dir(obj):
+					result={**obj.__dict__}
+				else:
+					result={k:getattr(obj,k) for k in dir(obj) }
+		return result
+	@staticmethod
+	def mkup(string,style=''):
+		mask=static['stylemask']
+		pfx=settings['markup'].get(style,'')
+		sfx=settings['markup'].get('reset')
+		result=mask.format(PFX=pfx, STR=string, SFX=sfx)
+		return  result
 
-def getPrintTree(**k):
-		name=[*k.keys()][0]
-		data=k.get(name)
-		k.pop(name)
-		K=k.get('offset_key',' ')
-		C=k.get('offset_colon',' ')
-		V=k.get('offset_value',' ')
-		treeString=buildTree(data,**k)
-		return treeString.format(K=K,C=C,V=V)
+def string(**k):
+	name=[*k.keys()][0]
+	data=k.get(name)
+	k.pop(name)
+	offset=k.get('offset',['  ','  ','  '])
+	K=offset[0]
+	C=offset[1]
+	V=offset[2]
+	treeStruct=build.Structure(data,**k)
+	treeString=build.Tree(data,treeStruct,**k)
+	return treeString.format(K=K,C=C,V=V)
+def stdOut(**k):
+	result=string(**k)
+	print(result)
